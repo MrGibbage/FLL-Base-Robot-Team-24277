@@ -28,17 +28,21 @@ To upload the file, use a command like this
 You will write your programs to move the robot and to do things. VS Code will give you hints 
 along the way and will help you to make sure spelling is correct. Yes, spelling matters!!
 
-First, make a folder when you want to keep your files. May I suggest something in your 
+First, make a folder where you want to keep your files. May I suggest something in your 
 Documents folder, such as
 
 Documents/FLL_Fall_2022
 
-In there you will make your program, which you can call just about anything, such as
+In there you will make your program(s), which you can call just about anything, such as
 main.py
 mission1.py
 MissionImpossible.py
+AnythingYouWant.py
 etc. You get the picture. You can have as many of those as you want. Don't forget to put the 
-other files in there as mentioned above. Your folder should look like this
+other files in there as mentioned above. And all of the files, including the ones you write,
+must end with ".py" (not including this instructions file)
+
+Your folder should look like this
 
 Documents/FLL_Fall_2022
 ├── spike.py *
@@ -67,7 +71,9 @@ br = base_robot.BaseRobot()
 
 
 In python, indenting also matters. Unless you are writing loops or using if/then 
-statements, all of your code should start in the first column of each line.
+statements, all of your code MUST start in the first column of each line. Also,
+you can use the line continuation "\" like that import line above, in which case
+the indenting doesn't matter for the continued lines.
 
 When you are writing your code, remember, to python, your robot's name 
 is "br" (see that line up above that starts with br =? That's where your robot 
