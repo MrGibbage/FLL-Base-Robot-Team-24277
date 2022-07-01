@@ -133,12 +133,6 @@ class BaseRobot():
         self.driveMotors.stop()
         print("Stopped. Drove " + str(testMotor.get_degrees_counted()) + " of " + str(totalDegreesNeeded) + " degrees")
 
-    @staticmethod
-    def calulateProportionFactor(speed):
-        if speed > 40:
-            return 6
-        return int(speed * -0.4 + 20)
-
     def GyroTurn(self, desiredDegrees):
         """
         Turns the robot the specified number of degrees. Positive numbers turn to the \
