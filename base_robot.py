@@ -195,7 +195,11 @@ class BaseRobot():
         while testMotor.get_degrees_counted() < totalDegreesNeeded:
             error = desiredHeading - self.hub.motion_sensor.get_yaw_angle()
             totalDegreesRemaining = totalDegreesNeeded - testMotor.get_degrees_counted()
+
+            # calculate the speed based on how much distance is remaining. Go at maxSpeed
+            # until the last 540 degrees. Then slow down rather than abruptly stopping.
             curSpeed = minSpeed + ((maxSpeed - minSpeed) * min(totalDegreesRemaining, 540) / 540)
+            
             self.driveMotors.start(error * proportionFactor, int(curSpeed))
             #wait_for_seconds(loopDelay)
 
