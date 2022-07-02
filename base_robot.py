@@ -56,8 +56,10 @@ class BaseRobot():
 
         self.hub = PrimeHub()
 
-        self.driveMotors = MotorPair(self._leftDriveMotorPort, self._rightDriveMotorPort)
-        self.driveMotors.set_motor_rotation(amount = self._tireCircum, unit = 'cm')
+        self.driveMotors = MotorPair(self._leftDriveMotorPort, \
+            self._rightDriveMotorPort)
+        self.driveMotors.set_motor_rotation(amount = self._tireCircum, \
+            unit = 'cm')
 
         self.leftMedMotor = Motor(self._leftMediumMotorPort)
         self.rightMedMotor = Motor(self._rightMediumMotorPort)
@@ -69,7 +71,8 @@ class BaseRobot():
 
     def AccelGyroDriveForward(self, desiredDistance):
         """
-        Drives the robot very straight for `desiredDistance`, using acceleration and gyro.
+        Drives the robot very straight for `desiredDistance`, using \
+            acceleration and gyro.
         
         Accelerates to prevent wheel slipping. Gyro keeps the robot \
         pointing on the same heading.
@@ -82,7 +85,8 @@ class BaseRobot():
 
         desiredDistance: How far the robot should go in cm
         type: float
-        values: Any value above 16.0. You can enter smaller numbers, but the robot will still go 16cm
+        values: Any value above 16.0. You can enter smaller numbers, but the \
+            robot will still go 16cm
         default: No default value
 
         Example
@@ -100,20 +104,24 @@ class BaseRobot():
     def GyroTurn(self, desiredDegrees):
         """
         Turns the robot the specified number of `desiredDegrees`. 
-        Positive numbers turn to the right, negative numbers turn the robot to the left. \
-        Note that when the robot makes the turn, it will always overshoot by about seven \
-        degrees. In other words if you need a +90 degree turn, you will probably end up \
-        commanding something around +83 degrees. You may also want to put a wait_for_seconds(0.2) \
-        or something like that after a gyro turn. Just to make sure the robot has stopped \
-        moving before continuing with more instructions.
+        Positive numbers turn to the right, negative numbers turn the robot \
+            to the left. Note that when the robot makes the turn, it will \
+            always overshoot by about seven degrees. In other words if you \
+            need a +90 degree turn, you will probably end up commanding \
+            something around +83 degrees. You may also want to put a \
+            wait_for_seconds(0.2) or something like that after a gyro turn. \
+            Just to make sure the robot has stopped moving before continuing \
+            with more instructions.
 
         Parameter
         -------------
 
-        desiredDegrees: How many degrees should the robot turn. Positive values turn the robot to the right, negative values turn to the left.
+        desiredDegrees: How many degrees should the robot turn. \
+            Positive values turn the robot to the right, negative values turn \
+            to the left.
         type: float
-        values: Any. Best to keep the numbers less than 180, just so the robot doesn't \
-        turn more than necessary.
+        values: Any. Best to keep the numbers less than 180, just so the \
+            robot doesn't turn more than necessary.
         default: No default value
 
         Example
@@ -154,12 +162,15 @@ class BaseRobot():
 
         desiredHeading: On what heading should the robot drive (float)
         type: float
-        values: any. Best if the `desiredHeading` is close to the current heading. Unpredictable robot movement may occur for large heading differences.
+        values: any. Best if the `desiredHeading` is close to the current \
+            heading. Unpredictable robot movement may occur for large heading \
+            differences.
         default: no default value
 
         desiredDistance: How far the robot should go in cm (float)
         type: float
-        values: any value above 16.0. You can enter smaller numbers, but the robot will still go 16cm
+        values: any value above 16.0. You can enter smaller numbers, but the \
+            robot will still go 16cm
         default: no default value
 
         See Also
@@ -178,7 +189,7 @@ class BaseRobot():
         maxSpeed = 75 #rpm
         minSpeed = 5 #rpm
         loopDelay = 0.02 #seconds
-        proportionFactor = 4 #how much do we correct for every degree off course
+        proportionFactor = 4 #how much to correct for every degree off course
         testMotor = Motor(self._rightDriveMotorPort)
         testMotor.set_degrees_counted(0)
         totalDegreesNeeded = desiredDistance / self._tireCircum * 360
@@ -194,11 +205,14 @@ class BaseRobot():
         curSpeed = maxSpeed
         while testMotor.get_degrees_counted() < totalDegreesNeeded:
             error = desiredHeading - self.hub.motion_sensor.get_yaw_angle()
-            totalDegreesRemaining = totalDegreesNeeded - testMotor.get_degrees_counted()
+            totalDegreesRemaining = totalDegreesNeeded - \
+                testMotor.get_degrees_counted()
 
-            # calculate the speed based on how much distance is remaining. Go at maxSpeed
-            # until the last 540 degrees. Then slow down rather than abruptly stopping.
-            curSpeed = minSpeed + ((maxSpeed - minSpeed) * min(totalDegreesRemaining, 540) / 540)
+            # calculate the speed based on how much distance is remaining. 
+            # Go at maxSpeed until the last 540 degrees. Then slow down rather
+            # than abruptly stopping.
+            curSpeed = minSpeed + \
+                ((maxSpeed - minSpeed) * min(totalDegreesRemaining, 540) / 540)
             
             self.driveMotors.start(error * proportionFactor, int(curSpeed))
             #wait_for_seconds(loopDelay)
@@ -222,13 +236,15 @@ class BaseRobot():
 
         desiredHeading: On what heading should the robot drive
         type: float
-        values: any. However, it must be a heading larger than the current heading (that is, to the \
-        right). If a heading is entered that is less than the current heading, the program will exit.
-        default: no default value
+        values: any. However, it must be a heading larger than the current \
+            heading (that is, to the right). If a heading is entered that is \
+            less than the current heading, the program will exit. default: no \
+            default value
 
         desiredDistance: How far the robot should go in cm
         type: float
-        values: any value above 16.0. You can enter smaller numbers, but the robot will still go 16cm
+        values: any value above 16.0. You can enter smaller numbers, but the \
+            robot will still go 16cm
         default: no default value
 
         Example
@@ -236,11 +252,12 @@ class BaseRobot():
 
         >>> import base_robot
         >>> br = base_robot.BaseRobot()
-        >>> br.TurnRightAndDriveOnHeading(90, 40) #drive on heading 90 for 40 cm
+        >>> br.TurnRightAndDriveOnHeading(90, 40) #drive heading 90 for 40 cm
 
         """
         if desiredHeading < self.hub.motion_sensor.get_yaw_angle():
-            print("Cannot turn right to a heading that is smaller than the current heading. Exiting.")
+            print("Cannot turn right to a heading that is smaller than the \
+                current heading. Exiting.")
             sys.exit(1)
 
         overshoot = 7 #how many degrees does gyroturn normally overshoot by
@@ -265,13 +282,15 @@ class BaseRobot():
 
         desiredHeading: On what heading should the robot drive
         type: float
-        values: any. However, it must be a heading smaller than the current heading (that is, to the \
-        left). If a heading is entered that is greater than the current heading, the program will exit.
+        values: any. However, it must be a heading smaller than the current \
+            heading (that is, to the left). If a heading is entered that is \
+            greater than the current heading, the program will exit.
         default: no default value
 
         desiredDistance: How far the robot should go in cm
         type: float
-        values: any value above 16.0. You can enter smaller numbers, but the robot will still go 16cm
+        values: any value above 16.0. You can enter smaller numbers, but the \
+            robot will still go 16cm
         default: no default value
 
         Example
@@ -284,7 +303,8 @@ class BaseRobot():
         """
 
         if desiredHeading > self.hub.motion_sensor.get_yaw_angle():
-            print("Cannot turn left to a heading that is greater than the current heading. Exiting.")
+            print("Cannot turn left to a heading that is greater than the \
+                current heading. Exiting.")
             sys.exit(1)
 
         overshoot = 7 #how many degrees does gyroturn normally overshoot by
