@@ -9,13 +9,7 @@ from spike.operator import greater_than, greater_than_or_equal_to, \
 
 br = base_robot.BaseRobot()
 
-#back up gently to make sure the robot is square in the jig
-#then reset the gyro
-# br.driveMotors.move(.5, "seconds", 0, -10)
-# br.hub.motion_sensor.reset_yaw_angle()
-
-# br.AccelGyroDriveFwd(55)
-# br.TurnRightAndDriveOnHeading(85, 50)
+# Put all of the individual missions in there first. Order doesn't matter
 
 def mission1():
     br.hub.light_matrix.show_image("ANGRY")
@@ -30,6 +24,9 @@ def mission3():
     br.AccelGyroDriveFwd(55)
     br.TurnRightAndDriveOnHeading(85, 50)
 
+
+
+# Run the missions in order here
 
 mission1()
 

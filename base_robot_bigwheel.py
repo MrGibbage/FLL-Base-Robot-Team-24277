@@ -36,17 +36,17 @@ class BaseRobot():
         self._version = "1.0 (20 May 2022)"
 
         self.timer = Timer()
-        self._leftDriveMotorPort = 'A'
-        self._rightDriveMotorPort = 'C'
-        self._leftMediumMotorPort = 'F'
-        self._rightMediumMotorPort = 'B'
-        #self._colorSensorPort = NULL
+        self._leftDriveMotorPort = 'D'
+        self._rightDriveMotorPort = 'B'
+        self._leftMediumMotorPort = 'A'
+        self._rightMediumMotorPort = 'E'
+        self._colorSensorPort = 'F'
         #self._touchSensorPort = NULL
 
-        self._tireDiameter = 5.6 #cm
+        self._tireDiameter = 8.8 #cm
         self._tireCircum = self._tireDiameter * math.pi #cm
 
-        self._errorArray = [0, 0, 0, 0, 0]
+        self.debuggingEnabled = False
 
         self.hub = PrimeHub()
 
@@ -61,6 +61,10 @@ class BaseRobot():
 
     def GetVersion(self):
         return self._version
+
+    def debugPrint(self, text):
+        if self.debuggingEnabled:
+            print(text)
 
 
     def AccelGyroDriveForward(self, desiredDistance):
@@ -127,7 +131,7 @@ class BaseRobot():
         >>> wait_for_seconds(0.2) #just to be sure the robot has stopped moving
         """
         self.hub.motion_sensor.reset_yaw_angle()
-        speed = 15
+        speed = 5
 
         if desiredDegrees < 0:
             while self.hub.motion_sensor.get_yaw_angle() > desiredDegrees:
@@ -137,6 +141,7 @@ class BaseRobot():
                 self.driveMotors.start_tank(speed, -speed)
         self.driveMotors.stop()
         wait_for_seconds(0.25)
+        self.debugPrint("Done turning. Current heading is " + str(self.hub.motion_sensor.get_yaw_angle()))
 
 
     def GyroDriveOnHeading(self, desiredHeading, desiredDistance):
@@ -180,36 +185,54 @@ class BaseRobot():
         >>> br.GyroDriveOnHeading(90, 40) #drive on heading 90 for 40 cm
 
         """
-        maxSpeed = 75 #rpm
-        minSpeed = 5 #rpm
-        loopDelay = 0.02 #seconds
-        proportionFactor = 4 #how much to correct for every degree off course
+        maxSpeed = 60 #rpm
+        minSpeed = 3 #rpm
+        loopDelay = 0.1 #seconds
+        proportionFactor = 2 #how much to correct for every degree off course
+        degRemCheckpoint = 180 #when to start slowing down
         testMotor = Motor(self._rightDriveMotorPort)
         testMotor.set_degrees_counted(0)
         totalDegreesNeeded = desiredDistance / self._tireCircum * 360
+        self.debugPrint("totalDegreesNeeded: " + str(totalDegreesNeeded))
         self.driveMotors.start(0, minSpeed)
         #First accelerate up to maxSpeed
-        for curSpeed in range(minSpeed, maxSpeed):
-            error = desiredHeading - self.hub.motion_sensor.get_yaw_angle()
-            self.driveMotors.start(error * proportionFactor, curSpeed)
+        for curSpeed in range(minSpeed, maxSpeed, 5):
+            curHeading = self.hub.motion_sensor.get_yaw_angle()
+            error = desiredHeading - curHeading
+            steering = int(error * proportionFactor)
+            self.driveMotors.start(steering, curSpeed)
+            self.debugPrint("curSpeed: " + str(curSpeed) + "; curHeading: " + str(curHeading) +\
+            "; error: " + str(error) + "; steering: " + str(steering))
             wait_for_seconds(loopDelay)
 
         #we are now driving at maxSpeed
 
         curSpeed = maxSpeed
         while testMotor.get_degrees_counted() < totalDegreesNeeded:
-            error = desiredHeading - self.hub.motion_sensor.get_yaw_angle()
+            curHeading = self.hub.motion_sensor.get_yaw_angle()
+            error = desiredHeading - curHeading
+            steering = int(error * proportionFactor)
             totalDegreesRemaining = totalDegreesNeeded - \
                 testMotor.get_degrees_counted()
 
             # calculate the speed based on how much distance is remaining. 
-            # Go at maxSpeed until the last 540 degrees. Then slow down rather
+            # Go at maxSpeed until the last few degrees. Then slow down rather
             # than abruptly stopping.
-            curSpeed = minSpeed + \
-                ((maxSpeed - minSpeed) * min(totalDegreesRemaining, 540) / 540)
-            
-            self.driveMotors.start(error * proportionFactor, int(curSpeed))
-            #wait_for_seconds(loopDelay)
+
+            if totalDegreesRemaining < degRemCheckpoint:
+                curSpeed = 20
+
+            # curSpeed = minSpeed + \
+            #     ((maxSpeed - minSpeed) * min(totalDegreesRemaining, degRemCheckpoint) / degRemCheckpoint)
+
+            self.debugPrint("curSpeed: " + str(curSpeed) + "; curHeading: " + str(curHeading) +\
+                "; totalDegreesRemaining: " + str(totalDegreesRemaining) + "; error: " + str(error) +\
+                "; steering: " + str(steering))
+            # if totalDegreesRemaining < degRemCheckpoint:
+            #     proportionFactor = 0 # don't try to correct while slowing
+
+            self.driveMotors.start(steering, int(curSpeed))
+            wait_for_seconds(loopDelay)
 
         self.driveMotors.set_stop_action('brake')
         self.driveMotors.stop()
@@ -230,7 +253,7 @@ class BaseRobot():
 
         desiredHeading: On what heading should the robot drive
         type: float
-        values: any. However, it must be a heading larger than the current \
+        values: 0 to 179. However, it must be a heading larger than the current \
             heading (that is, to the right). If a heading is entered that is \
             less than the current heading, the program will exit. default: no \
             default value
@@ -254,10 +277,15 @@ class BaseRobot():
                 "than the current heading. Exiting."
             sys.exit(errorMessage)
 
-        overshoot = 7 #how many degrees does gyroturn normally overshoot by
+        overshoot = 3 #how many degrees does gyroturn normally overshoot by
 
         currentHeading = int(self.hub.motion_sensor.get_yaw_angle())
-        self.GyroTurn(desiredHeading - overshoot - currentHeading)
+        turnCommand = desiredHeading - overshoot - currentHeading
+        self.debugPrint("Turning right from " + str(currentHeading) + " to " + str(desiredHeading))
+        self.GyroTurn(turnCommand)
+        currentHeading = int(self.hub.motion_sensor.get_yaw_angle())
+        self.debugPrint("Turn completed. Current heading is " + str(currentHeading) + \
+            "; the desired heading was " + str(desiredHeading))
         self.GyroDriveOnHeading(desiredHeading, desiredDistance)
 
 
@@ -276,7 +304,7 @@ class BaseRobot():
 
         desiredHeading: On what heading should the robot drive
         type: float
-        values: any. However, it must be a heading smaller than the current \
+        values: 0 to -179. However, it must be a heading smaller than the current \
             heading (that is, to the left). If a heading is entered that is \
             greater than the current heading, the program will exit.
         default: no default value
